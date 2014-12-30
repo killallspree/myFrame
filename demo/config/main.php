@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 defined("BASEPATH") or define("BASEPATH",realpath(dirname(__FILE__).DS.'..'));
 
 return array(
@@ -23,14 +23,14 @@ return array(
                     'tablePrefix' => 'cmsl_',   //表前缀
                 ),
                 "slave_1" => array(     //支持多个从数据库,分担查询压力
-                    'db_host' => '127.0.0.2',
+                    'db_host' => '116.90.87.180',
                     'db_name' => 'book',
                     'db_user' => 'root',
-                    'db_password' => '',
+                    'db_password' => 'viewo_admin_z6f2',
                     'tablePrefix' => 'cmsl_',
                 ),
                 "slave_2" => array(
-                    'db_host' => '127.0.0.3',
+                    'db_host' => '127.0.0.2',
                     'db_name' => 'book',
                     'db_user' => 'user2',
                     'db_password' => 'passwd2',
@@ -39,10 +39,10 @@ return array(
             ),
             'bbb1' => array(    //数据库名为count(支持多数据库)
                 "slave_1" => array(     //支持多个从数据库,分担查询压力
-                    'db_host' => '127.0.0.1',
-                    'db_name' => 'liqu',
+                    'db_host' => '116.90.87.180',
+                    'db_name' => 'liqu_cms',
                     'db_user' => 'root',
-                    'db_password' => '',
+                    'db_password' => 'viewo_admin_z6f2',
                     'tablePrefix' => 'cmsl_',
                 )
             )

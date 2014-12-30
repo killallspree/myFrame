@@ -13,6 +13,7 @@ class UController extends CController {
 
     //此方法
     public function beforeControllerAction(){
+        return true;
         $_hmt = new _HMT("b542296c5d3c1465d79926544e361e09");
         $_hmtPixel = $_hmt->trackPageView();
         $this->assign(array("_hmtPixel"=>$_hmtPixel));
@@ -31,6 +32,10 @@ class UController extends CController {
             ));
         }
         return true;
+    }
+
+    public function nullContent(){
+        die("你访问的内容不存在");
     }
 
 }

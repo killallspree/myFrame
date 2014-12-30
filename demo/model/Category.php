@@ -9,6 +9,7 @@
 class Category extends AModel{
 
     public $pk = "cate_id";
+    public $fields = "name";
 
     public function list_all_arr(){
         $all_arr = array();
