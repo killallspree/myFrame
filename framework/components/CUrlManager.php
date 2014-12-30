@@ -1,9 +1,16 @@
 <?php
 
-class CUrlManager extends CApplicationComponent
+class CUrlManager extends CComponent
 {
     public $urlFormat;
     public $rules;
+
+    public function init($conf = array())
+    {
+        foreach($conf as $key=>$value){
+            $this->$key = $value;
+        }
+    }
 
     public function parseUrl($request_url){
         foreach($this->rules as $url=>$php_path){
@@ -24,12 +31,5 @@ class CUrlManager extends CApplicationComponent
             return $path[0];
         }else
             return '';
-    }
-
-    public function init($conf = array())
-    {
-        foreach($conf as $key=>$value){
-            $this->$key = $value;
-        }
     }
 }

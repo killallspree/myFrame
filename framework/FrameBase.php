@@ -1,26 +1,13 @@
 <?php
-
 defined('FRAME_PATH') or define('FRAME_PATH',dirname(__FILE__));
 defined('DS') or define('DS',DIRECTORY_SEPARATOR);
-
 
 class FrameBase{
 
     private static $_app;
 
-    private static $_coreClasses=array(
-//        'CApplication' => '/base/CApplication.php',
-//        'CApplicationComponent' => '/base/CApplicationComponent.php',
+    private static $_coreClasses = array(
 //        'CWebApplication' => '/web/CWebApplication.php',
-//        'CUrlManager' => '/web/CUrlManager.php',
-//        'CController' => '/web/CController.php',
-//        'CModel' => '/web/CModel.php',
-//        'CView' => '/web/CView.php',
-//        'CRedis' => '/components/CRedis.php',
-//        'Flexihash' => '/components/flexihash/include/init.php',
-//        'Smarty' => '/components/smarty/Smarty.class.php',
-//        'mysqlDB' => '/components/mysqlDB.php',
-//        'GlobalParams' => '/web/GlobalParams.php'
     );
 
     public static function setApplication($app)
@@ -28,7 +15,7 @@ class FrameBase{
         if(self::$_app===null || $app===null)
             self::$_app=$app;
         else
-            throw new CException(Yii::t('yii','Yii application can only be created once.'));
+            throw new Exception('Yii application can only be created once.');
     }
 
     public static function app()
@@ -39,10 +26,13 @@ class FrameBase{
     //创建web应用
     public static function createWebApplication($config=null)
     {
+        //添加include目录
+        FrameBase::unshift_include_path(array(FRAME_PATH.DS."web"));
+
         return self::createApplication('CWebApplication',$config);
     }
 
-    //创建web应用
+    //创建app应用
     public static function createAppApplication($config=null)
     {
         return self::createApplication('CAppApplication',$config);
@@ -51,6 +41,9 @@ class FrameBase{
     //创建wap应用
     public static function createWapApplication($class,$config=null)
     {
+        //添加include目录
+        FrameBase::unshift_include_path(array(FRAME_PATH.DS."wap"));
+
         return self::createApplication('CWapApplication',$config);
     }
 
@@ -116,7 +109,6 @@ class FrameBase{
     }
 
 }
-
 //添加include目录
 FrameBase::unshift_include_path(array(FRAME_PATH.DS."base",FRAME_PATH.DS."components"));
 //将FrameBase的autoload函数注册到__autoload函数栈中

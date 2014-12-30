@@ -1,6 +1,6 @@
 <?php
 
-class CView extends CApplicationComponent{
+class CView extends CComponent{
 
     public $Smarty;
     public $config = array();

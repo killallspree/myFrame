@@ -12,29 +12,27 @@ abstract class CApplication {
     private $_components=array();
     private $_componentConfig=array();
 
-    //处理请求
-    abstract public function processRequest();
-
-    abstract public function run();
-
     public function __construct($config_dir=null)
     {
-        $config=require($config_dir);
-        //设置项目根目录
-        $this->setBasePath($config['basePath']);
+        $config = require($config_dir);
+
+        $this->setBasePath($config['basePath']);    //项目根目录
+        $this->setIncludePath($config['import']);   //注册include_path
+
+        $this->configure($config);                  //配置文件
+
+        $this->registerCoreComponents();    //注册核心组件
+
+        $this->preExecComponents();     //执行组件
 
         Frame::setApplication($this);
-        if(isset($config['import']))
-            Frame::unshift_include_path($config['import']);
 
-        $this->configure($config);
+    }
 
-        $this->db_init();
-        //加载核心模块
-        $this->registerCoreComponents();
-        //设置全局变量
-        $this->setGlobalParam();
-
+    public function setBasePath($path)
+    {
+        defined('BASE_PATH') or define('BASE_PATH',realpath($path));
+        if(!is_dir(BASE_PATH)) throw new Exception('BASE_PATH config error;');
     }
 
     public function configure($config)
@@ -46,77 +44,42 @@ abstract class CApplication {
         }
     }
 
+    public function setIncludePath($paths){
+        is_dir(BASEPATH.DS."model") or mk_dir(BASEPATH.DS."model") or die("缺少model目录");
+        is_dir(BASEPATH.DS."components") or mk_dir(BASEPATH.DS."components") or die("缺少components目录");
+        Frame::unshift_include_path(BASEPATH.DS."model");
+        Frame::unshift_include_path(BASEPATH.DS."components");
+        foreach($paths as $path){
+            Frame::unshift_include_path($path);
+        }
+    }
+
     public function db_init(){
         mysqlDB::setDBConfig($this->db);
         mysqlDB::setDBDefault($this->defaultDb);
     }
 
-    public function setGlobalParam()
-    {
-        $this->getComponent('global')->defineParams();
-    }
-
-    public function setBasePath($path)
-    {
-        defined('BASE_PATH') or define('BASE_PATH',realpath($path));
-        if(!is_dir(BASE_PATH))
-            throw new CException(Yii::t('yii','Application base path "{path}" is not a valid directory.',
-                array('{path}'=>$path)));
-    }
-
-    public function getBasePath()
-    {
-        return BASE_PATH;
-    }
-
-    public function getUrlManager()
-    {
-        return $this->getComponent('urlManager');
-    }
-
     //配置核心模块的config
     protected function registerCoreComponents()
     {
-        $components=array(
+        $components = array(
             'urlManager'=>array(
                 'class'=>'CUrlManager',
             ),
             'db'=>array(
-                'class'=>'mysqlDB',
-            ),
-            'view'=>array(
-                'class'=>'CView',
-            ),
-            'global'=>array(
-                'class'=>'GlobalParams',
-            ),
-            'messages'=>array(
-                'class'=>'CPhpMessageSource',
-            ),
-            'errorHandler'=>array(
-                'class'=>'CErrorHandler',
-            ),
-            'request'=>array(
-                'class'=>'CHttpRequest',
-            ),
-            'format'=>array(
-                'class'=>'CFormatter',
+                'class'=>'CModel',
             ),
             'redis'=>array(
                 'class'=>'CRedis',
+            ),
+            'global'=>array(
+                'class'=>'GlobalParams',
             ),
         );
 
         $this->setComponents($components);
     }
 
-    /**
-     * Getter magic method.
-     * This method is overridden to support accessing application components
-     * like reading module properties.
-     * @param string $name application component or property name
-     * @return mixed the named property value
-     */
     public function __get($name)
     {
         if($this->hasComponent($name))
@@ -125,13 +88,6 @@ abstract class CApplication {
             return null;
     }
 
-    /**
-     * Checks if a property value is null.
-     * This method overrides the parent implementation by checking
-     * if the named application component is loaded.
-     * @param string $name the property name or the event name
-     * @return boolean whether the property value is null
-     */
     public function __isset($name)
     {
         if($this->hasComponent($name))
@@ -140,11 +96,6 @@ abstract class CApplication {
             return false;
     }
 
-    /**
-     * Checks whether the named component exists.
-     * @param string $id application component ID
-     * @return boolean whether the named application component exists (including both loaded and disabled.)
-     */
     public function hasComponent($id)
     {
         return isset($this->_components[$id]) || isset($this->_componentConfig[$id]);
@@ -157,12 +108,8 @@ abstract class CApplication {
         elseif(isset($this->_componentConfig[$id]) && $createIfNull)
         {
             $config = $this->_componentConfig[$id];
-            if(!isset($config['enabled']) || $config['enabled'])
-            {
-                unset($config['enabled']);
-                $component=Frame::createComponent($config);
-                return $this->_components[$id]=$component;
-            }
+            $component = Frame::createComponent($config);
+            return $this->_components[$id] = $component;
         }else
             throw new Exception("Unable to load component '{$id}'.");
     }
@@ -189,13 +136,11 @@ abstract class CApplication {
             $this->setComponent($id,$component,$merge);
     }
 
-    /**
-     * Loads static application components.
-     */
-    protected function preloadComponents()
+    protected function preExecComponents()
     {
-        foreach($this->preload as $id)
-            $this->getComponent($id);
+        $this->getComponent('global')->defineParams();    //设置全局变量
+        $this->route = $this->getComponent('urlManager')->parseUrl($_GET['pathinfo']);  //路径映射
+        $this->getComponent('db');    //设置全局变量
     }
 
 }

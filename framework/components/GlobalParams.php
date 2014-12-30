@@ -1,6 +1,6 @@
 <?php
 
-class GlobalParams extends CApplicationComponent{
+class GlobalParams extends CComponent{
 
     public $config;
 

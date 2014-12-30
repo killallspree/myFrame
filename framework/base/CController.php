@@ -3,7 +3,6 @@
 class CController {
 
     public $defaultAction = 'Index';
-    public $basePath = '';
     public $viewPath = '';
     public $view = null;
     public $name = '';
@@ -13,6 +12,19 @@ class CController {
         $this->setViewPath();
         $this->name = strtolower(str_ireplace("Controller","",get_class($this)));
         $this->view = Frame::app()->getViewRenderer();
+    }
+
+    public function run($actionID)
+    {
+        if($actionID==='')
+            $actionID=$this->defaultAction;
+        $action = 'action'.$actionID;
+        if(method_exists($this,$action))
+        {
+            $this->$action();
+        }else{
+            throw new Exception($action.' Action class '.get_class($this).' does not exist.');
+        }
     }
 
     public function __call($function,$params){
@@ -39,19 +51,6 @@ class CController {
 
     public function getViewPath(){
         return $this->viewPath;
-    }
-
-    public function run($actionID)
-    {
-        if($actionID==='')
-            $actionID=$this->defaultAction;
-        $action = 'action'.$actionID;
-        if(method_exists($this,$action))
-        {
-            $this->$action();
-        }else{
-            throw new Exception($action.' Action class '.get_class($this).' does not exist.');
-        }
     }
 
     public function beforeControllerAction(){

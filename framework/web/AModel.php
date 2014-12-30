@@ -1,47 +1,70 @@
 <?php
 
-/**
- * 切换DB，请重写
- * 静态变量：public static $db_name = "ol_zhuanqu";
- * 静态方法：public static function getDbName();
- */
-abstract class AModel extends CModel{
+abstract class AModel {
 
     public $prefix = '';
-    public $table;
-    public $pk = '';
+    public $_table = '';
+    public $_pk = '';
     public $_fileds = array();
     public $last_sql = '';
+    public $db_name = '';
 
-    public function init(){
-        $pre = $this->get_tablePrefix();
-        $this->prefix = $pre;
-        $this->setTableName();
+    public function __construct(){
+        $this->prefix = CModel::get_tablePrefix($this->db_name);
+        if(isset($this->table)&&$this->table) $this->_table = $this->prefix.$this->table;
+        else $this->_table = $this->setTableName();
+        $this->setPk($this->pk);
+        if(isset($this->fields)) $this->setField($this->fields);
     }
 
-    //子类想重置table_name时，请重写setTableName方法并调用parent.setTableName();
-    public function setTableName($table_name=""){
-        $table_name = $table_name?$table_name:strtolower(get_class($this));
-        $this->table = $this->prefix.$table_name;
+    public function query($query){
+        return CModel::getInstance($this->db_name,1)->query($query);
+    }
+
+    public function getRow($query){
+        return CModel::getInstance($this->db_name)->getRow($query);
+    }
+
+    public function getAll($query,$key=''){
+        return CModel::getInstance($this->db_name)->getAll($query,$key);
+    }
+
+    public function getLastSql($master=0){
+        return CModel::getInstance($this->db_name,$master)->last_sql;
+    }
+
+    public function Insert_ID(){
+        return CModel::getInstance($this->db_name,1)->Insert_ID();
+    }
+
+    public function db_close(){
+        CModel::getInstance($this->db_name)->db_close();
+        CModel::getInstance($this->db_name,1)->db_close();
+    }
+
+    public function setTableName(){
+        return $this->prefix.strtolower(get_class($this));
     }
 
     public function getTableName()
     {
-        return $this->table;
+        return $this->_table;
     }
 
-    public function setPk($pk="id"){
-        $this->pk = $pk;
+    public function setPk($pk){
+        $this->_pk = $pk?$pk:"id";
     }
 
     public function getPk(){
-        return $this->pk;
+        return $this->_pk;
     }
 
     //表的字段，新增与修改时会核对字段
     public function setField($fileds=""){
+        $fileds = $fileds?$fileds:"";
         if($fileds==""||empty($fileds)){
-            $fileds = $this->getAll("DESC $this->table;");
+            if(!$this->_table) die("please set table name");
+            $fileds = $this->getAll("DESC $this->_table;");
             $fileds = array_map(create_function('$val','return $val["Field"];'), $fileds);
         }
         if(is_string($fileds)) $fileds = explode(",",$fileds);
@@ -56,40 +79,41 @@ abstract class AModel extends CModel{
 
 
     public function findByPk($pk,$field='*'){
-        return $this->getRow("select $field from $this->table where $this->pk=$pk ;");
+        return $this->getRow("select $field from $this->_table where $this->_pk=$pk ;");
     }
 
-    public function findAll($field='*'){
-        return $this->getAll("select $field from $this->table ;");
+    public function findAll($field='*',$attributes=array()){
+        $where = $this->_getWhereByArray($attributes);
+        return $this->getAll("select $field from $this->_table $where ;");
     }
 
     public function findByAttributes($attributes,$field='*'){
         $where = $this->_getWhereByArray($attributes);
-        return $this->getRow("select $field from $this->table $where ;");
+        return $this->getRow("select $field from $this->_table $where ;");
     }
 
     public function findAllByAttributes($attributes,$field='*'){
         $where = $this->_getWhereByArray($attributes);
-        return $this->getAll("select $field from $this->table $where ;");
+        return $this->getAll("select $field from $this->_table $where ;");
     }
 
     public function findBySql($sql){
         return $this->getRow($sql);
     }
 
-    public function findAllBySql($sql){
-        return $this->getAll($sql);
+    public function findAllBySql($sql,$key=''){
+        return $this->getAll($sql,$key);
     }
 
     public function countAll(){
-        $sql = "select count(*) as total from $this->table;";
+        $sql = "select count(*) as total from $this->_table;";
         $total = $this->getRow($sql);
         return $total['total'];
     }
 
     public function countByAttributes($attributes){
         $where = $this->_getWhereByArray($attributes);
-        $sql = "select count(*) as total from $this->table $where;";
+        $sql = "select count(*) as total from $this->_table $where;";
         $total = $this->getRow($sql);
         return $total['total'];
     }
@@ -105,7 +129,7 @@ abstract class AModel extends CModel{
             $fields .= ",".$key."='".$ar."'";
         }
         trim($fields,",");
-        return $this->query("update $this->table set $fields where $this->pk=$pk ;");
+        return $this->query("update $this->_table set $fields where $this->_pk=$pk ;");
     }
 
     public function updateByAttributes($attributes,$params=array()){
@@ -117,23 +141,24 @@ abstract class AModel extends CModel{
         }
         trim($fields,",");
 
-        return $this->query("update $this->table set $fields $where ;");
+        return $this->query("update $this->_table set $fields $where ;");
     }
 
     public function deleteByPk($pk){
-        return $this->query("delete from $this->table where $this->pk=$pk ;");
+        return $this->query("delete from $this->_table where $this->_pk=$pk ;");
     }
 
     public function deleteByAttributes($attributes){
 
         $where = $this->_getWhereByArray($attributes);
-        return $this->query("delete from $this->table $where ;");
+        return $this->query("delete from $this->_table $where ;");
     }
 
 
     public function insert($arr=array(),$table=""){
+        if(empty($this->_fileds)) die("you can not use this function until setting 'filed' attributes;");
         if(empty($arr)) return false;
-        if(!$table) $table = $this->table;
+        if(!$table) $table = $this->_table;
 
         foreach($arr as $k=>$li){
             if(!in_array($k,$this->_fileds)) unset($arr[$k]);
@@ -151,8 +176,9 @@ abstract class AModel extends CModel{
     }
 
     public function update($wheres=array(),$arr=array(),$table=""){
+        if(empty($this->_fileds)) die("you can not use this function until setting 'filed' attributes;");
         if(empty($arr)||empty($wheres)) return false;
-        if(!$table) $table = $this->table;
+        if(!$table) $table = $this->_table;
 
         $update = "";
         if(!get_magic_quotes_gpc()) $arr = array_map("addslashes",$arr);
@@ -187,6 +213,10 @@ abstract class AModel extends CModel{
         }
         $where = "where 1=1";
         foreach($wheres as $key=>$ar){
+            if(is_int($key)){
+                $where .= " and $ar";
+                continue;
+            }
             $where .= " and ".$key."='".$ar."'";
         }
         return $where.$other;
