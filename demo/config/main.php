@@ -1,56 +1,60 @@
 <?php
-defined("BASEPATH") or define("BASEPATH",realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'..'));
+defined("BASEPATH") or define("BASEPATH",realpath(dirname(__FILE__).DS.'..'));
 
 return array(
 	'basePath'=>BASEPATH,
 	'name'=>'酷说客，小说阅读网。',
 
 	'import'=>array(    //类文件被默认加载的目录。类名必须与文件名同。
-        BASEPATH.DIRECTORY_SEPARATOR."model",
-        BASEPATH.DIRECTORY_SEPARATOR."components",
+//        BASEPATH.DS."model",
 	),
 
-	'defaultController'=>'site',
-
-    'defaultDb'=>'book',    //默认连接的数据库
-
-    'db' => array(
-        'book' => array(    //数据库名为book
-            "slave_1" => array(     //支持多个从数据库,分担查询压力
-                'db_host' => '127.0.0.1',
-                'db_name' => 'book',
-                'db_user' => 'user1',
-                'db_password' => 'passwd1',
-                'tablePrefix' => 'cmsl_',   //表前缀
-            ),
-            "slave_2" => array(
-                'db_host' => '127.0.0.2',
-                'db_name' => 'book',
-                'db_user' => 'user2',
-                'db_password' => 'passwd2',
-                'tablePrefix' => 'cmsl_',
-            ),
-        ),
-        'count' => array(    //数据库名为count(支持多数据库)
-            "slave_1" => array(     //支持多个从数据库,分担查询压力
-                'db_host' => '127.0.0.1',
-                'db_name' => 'count',
-                'db_user' => 'user1',
-                'db_password' => 'passwd1',
-                'tablePrefix' => 'cmsl_',
-            )
-        )
-    ),
-
 	'components'=>array(
+
+        'db' => array(
+            'defaultDb'=>'book',    //默认连接的数据库
+
+            'book' => array(    //数据库名为book
+                "master" => array(     //支持多个从数据库,分担查询压力
+                    'db_host' => '127.0.0.1',
+                    'db_name' => 'book',
+                    'db_user' => 'root',
+                    'db_password' => '',
+                    'tablePrefix' => 'cmsl_',   //表前缀
+                ),
+                "slave_1" => array(     //支持多个从数据库,分担查询压力
+                    'db_host' => '116.90.87.180',
+                    'db_name' => 'book',
+                    'db_user' => 'root',
+                    'db_password' => 'viewo_admin_z6f2',
+                    'tablePrefix' => 'cmsl_',
+                ),
+                "slave_2" => array(
+                    'db_host' => '127.0.0.2',
+                    'db_name' => 'book',
+                    'db_user' => 'user2',
+                    'db_password' => 'passwd2',
+                    'tablePrefix' => 'cmsl_',
+                ),
+            ),
+            'bbb1' => array(    //数据库名为count(支持多数据库)
+                "slave_1" => array(     //支持多个从数据库,分担查询压力
+                    'db_host' => '116.90.87.180',
+                    'db_name' => 'liqu_cms',
+                    'db_user' => 'root',
+                    'db_password' => 'viewo_admin_z6f2',
+                    'tablePrefix' => 'cmsl_',
+                )
+            )
+        ),
 
         'view' => array(
             'debugging' => false,
             'caching' => false,
             'cache_lifetime' => 120,
-            'template_dir' => BASEPATH.DIRECTORY_SEPARATOR."templates",  //模版目录
-            'compile_dir' => BASEPATH.DIRECTORY_SEPARATOR."templates_c",  //模版编译目录
-            'register_class' => 'tpl_global_func',  //注册类到模版中(类文件在components目录下，模板中通过{func::方法名($param)}来调用类中的方法)
+            'template_dir' => BASEPATH.DS."templates",  //模版目录
+            'compile_dir' => BASEPATH.DS."templates_c",  //模版编译目录
+            'register_class' => 'SmartyFunc',  //注册类到模版中(类文件在components目录下，模板中通过{func::方法名($param)}来调用类中的方法)
 
             //模版中用的常量
             'URL' => "http://www.kutalk.com/",
@@ -74,7 +78,7 @@ return array(
             'URL' => "http://www.kutalk.com/",
             'basePath'=> BASEPATH,
             "SEARCH_SDK" => "/home/service/xunsearch/sdk/php/lib/XS.php",
-            "SEARCH_INI" => BASEPATH.DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."book.ini",
+            "SEARCH_INI" => BASEPATH.DS."config".DS."book.ini",
         ),
 
 	),
